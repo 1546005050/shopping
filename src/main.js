@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import '@/utils/vant-ui'
+import '@/styles/common.less'
 // import Vant from 'vant'
 // import 'vant/lib/index.css'
 // 插件安装初始化：内部会将所有的vant组件进行导入注册

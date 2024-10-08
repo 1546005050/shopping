@@ -1,5 +1,5 @@
 <template>
-<div>我是cart</div>
+<div><h1>舔狗莫林3号</h1></div>
 </template>
 
 <script>

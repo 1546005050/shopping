@@ -1,5 +1,5 @@
 <template>
-<div>我是catgory</div>
+<div><h1>舔狗莫林2号</h1></div>
 </template>
 
 <script>
