@@ -74,7 +74,7 @@ export default {
       }
       // 没有定时器开启的时候，且定时秒数与开启时间一致时才可以倒计时
       if (!this.timer && this.New === this.totalTwo) {
-        // 发送请求
+        // 发送请求（预期：希望如果响应拦截器的status非200，最好抛出一个错误，await只会等待成功的promise）
         await Dl(this.captchaCode, this.captchaKey, this.mobile)
         Toast.success('验证码已发送')
         // 开启短信倒计时
@@ -97,13 +97,17 @@ export default {
         Toast.fail('手机验证码输入错误')
         return
       }
+      console.log('发送登录请求')
+
       const res = await Dl2(this.mobile, this.smsCode)
+      this.$store.commit('user/setUserInfo', res.data)
       console.log(res)
       Toast.success('登陆成功')
       this.$router.push('/')
     }
 
   },
+  // 离开页面清除定时器
   destroyed () {
     clearInterval(this.timer)
   }
