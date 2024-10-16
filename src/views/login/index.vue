@@ -103,7 +103,11 @@ export default {
       this.$store.commit('user/setUserInfo', res.data)
       console.log(res)
       Toast.success('登陆成功')
-      this.$router.push('/')
+      // 进行判断，看地址栏是否有无回调地址
+      // 如果有=>说明是其他页面，拦截到登录，需要会跳
+      // 如果没有=>正常去首页
+      const url = this.$route.query.backUrl || '/'
+      this.$router.replace(url)
     }
 
   },

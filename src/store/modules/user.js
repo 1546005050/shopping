@@ -15,6 +15,13 @@ export default {
       setInfo(obj)
     }
   },
-  actions: {},
+  actions: {
+    logOut (context) {
+      // 个人信息要重置
+      context.commit('setUserInfo', {})
+      // 购物车信息要充值
+      context.commit('cart/setCartList', [], { root: true })
+    }
+  },
   getters: {}
 }

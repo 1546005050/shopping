@@ -1,5 +1,7 @@
+import store from '@/store'
 import axios from 'axios'
 import { Toast } from 'vant'
+
 // 创建 axios实例，将来对创建出来的实例，进行自定义配置
 // 好处：不会污染原始的axios实例
 const instance = axios.create({
@@ -18,6 +20,13 @@ instance.interceptors.request.use(function (config) {
     loadingType: 'spinner', // 配置loading图表
     duration: 0
   })
+
+  const token = store.getters.token
+  if (token) {
+    config.headers['Access-Token'] = token
+    config.headers.platform = 'H5'
+  }
+
   return config
 }, function (error) {
   // 对请求错误做些什么

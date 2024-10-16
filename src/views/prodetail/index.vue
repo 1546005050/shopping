@@ -66,17 +66,48 @@
 
     <!-- 底部 -->
     <div class="footer">
-      <div class="icon-home">
+      <div @click="$router.push('/')" class="icon-home">
         <van-icon name="wap-home-o" />
         <span>首页</span>
       </div>
-      <div class="icon-cart">
-        <van-icon name="shopping-cart-o" />
-        <span>购物车</span>
-      </div>
-      <div class="btn-add">加入购物车</div>
-      <div class="btn-buy">立刻购买</div>
+      <div @click="$router.push('/cart')" class="icon-cart">
+  <span v-if="cartTotal > 0" class="num">{{ cartTotal }}</span>
+  <van-icon name="shopping-cart-o" />
+  <span>购物车</span>
+</div>
+      <div @click="Add" class="btn-add">加入购物车</div>
+      <div @click="Buy" class="btn-buy">立刻购买</div>
     </div>
+    <!-- 购物车弹层 -->
+<van-action-sheet v-model="showPannel" :title="mode === 'cart' ? '加入购物车' : '立刻购买'">
+  <div class="product">
+    <div class="product-title">
+      <div class="left">
+        <img :src="detail.goods_image" alt="">
+      </div>
+      <div class="right">
+        <div class="price">
+          <span>¥</span>
+          <span class="nowprice">{{detail.goods_price_min}}</span>
+        </div>
+        <div class="count">
+          <span>库存</span>
+          <span>{{detail.stock_total}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="num-box">
+      <span>数量</span>
+      <CountBox v-model="addCount"></CountBox>
+    </div>
+    <!-- 有库存才显示按钮 -->
+    <div class="showbtn" v-if="detail.stock_total">
+      <div class="btn" v-if="mode==='cart'" @click="addCart">加入购物车</div>
+      <div class="btn now" v-else @click="goPay">立刻购买</div>
+    </div>
+    <div class="btn-none" v-else>该商品已抢完</div>
+  </div>
+</van-action-sheet>
   </div>
 </template>
 
@@ -84,8 +115,13 @@
 import { Sp } from '@/api/shopping'
 import { Pl } from '@/api/pl'
 import defaultImg from '../../assets/default-avatar.png'
+import CountBox from '@/components/CountBox.vue'
+import { addCart } from '@/api/cart'
+import loginConfig from '@/mixins/loginConfig'
 export default {
   name: 'ProDetail',
+  mixins: [loginConfig],
+  components: { CountBox },
   data () {
     return {
       images: [],
@@ -93,7 +129,11 @@ export default {
       detail: {},
       total: 0,
       plList: [],
-      defaultImg
+      defaultImg,
+      showPannel: false,
+      mode: 'cart',
+      addCount: 1,
+      cartTotal: 0
     }
   },
   computed: {
@@ -119,9 +159,46 @@ export default {
       const { data: { list, total } } = await Pl(this.goodsId, 4)
       this.plList = list
       this.total = total
+    },
+    Add () {
+      this.mode = 'cart'
+      this.showPannel = true
+    },
+    Buy () {
+      this.mode = 'buyNow'
+      this.showPannel = true
+    },
+    // 根据我们的状态，判断是否需要显示这个登录确认框
+    // 未登录显示确认框
+    // 登录不显示
+    async addCart () {
+      // 判断token是否存在
+      // 1.如果token不存在，弹窗确认
+      // 2.如果token存在，就继续请求操作
+      if (this.loginConfirm()) {
+        return
+      }
+      const { data } = await addCart(this.goodsId, this.addCount, this.detail.skuList[0].goods_sku_id)
+      this.cartTotal = data.cartTotal
+      this.$toast('加入购物车成功')
+      this.showPannel = false
+    },
+    goPay () {
+      // 未登录的处理，需要弹出一个确认框 =>去登录，再逛逛
+      if (this.loginConfirm()) {
+        return
+      }
+      this.$router.push({
+        path: '/pay',
+        query: {
+          mode: 'buyNow',
+          goodsId: this.goodsId,
+          goodsSkuId: this.detail.skuList[0].goods_sku_id,
+          goodsNum: this.addCount
+        }
+      })
     }
   }
-
 }
 </script>
 
@@ -270,5 +347,70 @@ export default {
 
 .tips {
   padding: 10px;
+}
+
+.product {
+  .product-title {
+    display: flex;
+    .left {
+      img {
+        width: 90px;
+        height: 90px;
+      }
+      margin: 10px;
+    }
+    .right {
+      flex: 1;
+      padding: 10px;
+      .price {
+        font-size: 14px;
+        color: #fe560a;
+        .nowprice {
+          font-size: 24px;
+          margin: 0 5px;
+        }
+      }
+    }
+  }
+
+  .num-box {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    align-items: center;
+  }
+
+  .btn, .btn-none {
+    height: 40px;
+    line-height: 40px;
+    margin: 20px;
+    border-radius: 20px;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    background-color: rgb(255, 148, 2);
+  }
+  .btn.now {
+    background-color: #fe5630;
+  }
+  .btn-none {
+    background-color: #cccccc;
+  }
+}
+
+.footer .icon-cart {
+  position: relative;
+  padding: 0 6px;
+  .num {
+    z-index: 999;
+    position: absolute;
+    top: -2px;
+    right: 0;
+    min-width: 16px;
+    padding: 0 4px;
+    color: #fff;
+    text-align: center;
+    background-color: #ee0a24;
+    border-radius: 50%;
+  }
 }
 </style>
